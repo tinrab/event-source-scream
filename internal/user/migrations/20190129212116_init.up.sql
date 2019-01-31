@@ -10,11 +10,10 @@ CREATE TABLE "events"
   PRIMARY KEY ("id")
 );
 
-CREATE TABLE "accounts"
+CREATE TABLE "users"
 (
   "id"         bigint,
-  "title"      varchar(32),
-  "created_at" timestamp,
+  "name"       varchar(32),
 
   PRIMARY KEY ("id")
 );

@@ -7,22 +7,17 @@ import (
 	"github.com/tinrab/event-source-store/internal/pkg/database"
 )
 
-type Store interface {
-	Save(events []Event) error
-	Load(aggregateID id.ID, fromVersion uint64) ([]Event, error)
-}
-
-type store struct {
+type Store struct {
 	db *database.Database
 }
 
-func NewStore(db *database.Database) Store {
-	return &store{
+func NewStore(db *database.Database) *Store {
+	return &Store{
 		db: db,
 	}
 }
 
-func (s *store) Save(events []Event) (err error) {
+func (s *Store) Save(events []Event) (err error) {
 	txn, err := s.db.Begin()
 	if err != nil {
 		return
@@ -58,10 +53,11 @@ func (s *store) Save(events []Event) (err error) {
 	return
 }
 
-func (s *store) Load(aggregateID id.ID, fromVersion uint64) ([]Event, error) {
+func (s *Store) Load(aggregateID id.ID, fromVersion uint64) ([]Event, error) {
 	rows, err := s.db.Query(
-		"SELECT id, kind, version, fired_at, data FROM events WHERE aggregate_id = $1 ORDER BY fired_at DESC",
+		"SELECT id, kind, version, fired_at, data FROM events WHERE aggregate_id = $1 AND version > $2 ORDER BY fired_at DESC",
 		aggregateID,
+		fromVersion,
 	)
 	if err != nil {
 		return nil, err

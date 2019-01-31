@@ -7,21 +7,17 @@ import (
 	"github.com/tinrab/kit/id"
 )
 
-type Factory interface {
-	Make(kind Kind, aggregateID id.ID, data interface{}) Event
-}
-
-type factory struct {
+type Factory struct {
 	idGenerator *id.Generator
 }
 
-func NewFactory(idGenerator *id.Generator) Factory {
-	return &factory{
+func NewFactory(idGenerator *id.Generator) *Factory {
+	return &Factory{
 		idGenerator: idGenerator,
 	}
 }
 
-func (f *factory) Make(kind Kind, aggregateID id.ID, data interface{}) Event {
+func (f *Factory) Make(kind Kind, aggregateID id.ID, data interface{}) Event {
 	bd, _ := json.Marshal(data)
 
 	return &event{
@@ -34,7 +30,7 @@ func (f *factory) Make(kind Kind, aggregateID id.ID, data interface{}) Event {
 	}
 }
 
-func (f *factory) MakeFromPrevious(previous Event, kind Kind, data interface{}) Event {
+func (f *Factory) MakeFromPrevious(previous Event, kind Kind, data interface{}) Event {
 	bd, _ := json.Marshal(data)
 
 	return &event{

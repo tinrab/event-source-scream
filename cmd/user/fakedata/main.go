@@ -5,20 +5,19 @@ import (
 	"fmt"
 	"log"
 	"math/rand"
-	"time"
 
 	"github.com/icrowley/fake"
 	"github.com/tinrab/kit/id"
 
-	"github.com/tinrab/event-source-store/internal/account"
 	"github.com/tinrab/event-source-store/internal/pkg/config"
 	"github.com/tinrab/event-source-store/internal/pkg/database"
+	"github.com/tinrab/event-source-store/internal/user"
 )
 
 func main() {
 	flag.Parse()
 
-	c, err := config.Load("./cmd/account/config.yml")
+	c, err := config.Load("./cmd/user/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -28,20 +27,19 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := account.NewRepository(db)
+	r := user.NewRepository(db)
 
+	fake.Seed(42)
+	rand.Seed(42)
 	const n = 10
-	idGenerator := id.NewGenerator(0)
-	ids := idGenerator.GenerateList(n)
 
 	for i := 0; i < n; i++ {
-		a := account.Account{
-			ID:        ids[i],
-			Title:     fmt.Sprintf("%s %s", fake.FirstName(), fake.LastName()),
-			CreatedAt: time.Now().UTC().Add(-time.Duration(rand.Int31n(100)) * time.Hour),
+		u := user.User{
+			ID:   id.ID(i + 1),
+			Name: fmt.Sprintf("%s %s", fake.FirstName(), fake.LastName()),
 		}
 
-		if err := r.SaveAccount(a); err != nil {
+		if err := r.SaveUser(u); err != nil {
 			log.Fatal(err)
 		}
 	}

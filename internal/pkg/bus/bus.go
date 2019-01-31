@@ -1,7 +1,10 @@
 package bus
 
 import (
+	"encoding/json"
 	"fmt"
+	"log"
+	"time"
 
 	"github.com/nats-io/go-nats"
 
@@ -15,6 +18,8 @@ type Bus struct {
 }
 
 type SubscribeHandler func(channel string, data []byte)
+
+type RequestHandler func(data []byte) interface{}
 
 type Message struct {
 	Data    []byte
@@ -77,4 +82,36 @@ func (b *Bus) SubscribeChan(channel string) (chan Message, error) {
 	}()
 
 	return res, nil
+}
+
+func (b *Bus) Request(channel string, req interface{}, res interface{}, timeout time.Duration) error {
+	data, err := json.Marshal(req)
+	if err != nil {
+		return err
+	}
+
+	msg, err := b.conn.Request(channel, data, timeout)
+	if err != nil {
+		return err
+	}
+
+	return json.Unmarshal(msg.Data, res)
+}
+
+func (b *Bus) Reply(channel string, handler RequestHandler) error {
+	_, err := b.conn.Subscribe(channel, func(msg *nats.Msg) {
+		res := handler(msg.Data)
+
+		data, err := json.Marshal(res)
+		if err != nil {
+			log.Print(err)
+			return
+		}
+
+		err = b.conn.Publish(msg.Reply, data)
+		if err != nil {
+			log.Print(err)
+		}
+	})
+	return err
 }

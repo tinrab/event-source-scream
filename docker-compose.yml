@@ -1,16 +1,16 @@
 version: "3.7"
 
 services:
-  account_db:
+  user_db:
     image: "postgres:11.1"
-    container_name: "account_db"
+    container_name: "user_db"
     restart: always
     ports:
       - "5432:5432"
     environment:
       POSTGRES_USER: app
       POSTGRES_PASSWORD: 123456
-      POSTGRES_DB: accounts
+      POSTGRES_DB: users
   queue:
     image: "nats-streaming:0.11.2"
     container_name: "queue"

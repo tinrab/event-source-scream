@@ -23,7 +23,7 @@ func init() {
 func main() {
 	flag.Parse()
 
-	c, err := config.Load("./cmd/account/config.yml")
+	c, err := config.Load("./cmd/user/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -38,7 +38,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	m, err := migrate.NewWithDatabaseInstance("file://internal/account/migrations", "postgres", driver)
+	m, err := migrate.NewWithDatabaseInstance("file://internal/user/migrations", "postgres", driver)
 	if err != nil {
 		log.Fatal(err)
 	}

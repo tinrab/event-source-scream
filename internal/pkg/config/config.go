@@ -7,6 +7,7 @@ import (
 type Config struct {
 	Database DatabaseConfig `cfg:"database"`
 	Bus      BusConfig      `cfg:"bus"`
+	API      APIConfig      `cfg:"api"`
 }
 
 type DatabaseConfig struct {
@@ -19,6 +20,10 @@ type DatabaseConfig struct {
 
 type BusConfig struct {
 	Host string `cfg:"host"`
+	Port uint16 `cfg:"port"`
+}
+
+type APIConfig struct {
 	Port uint16 `cfg:"port"`
 }
 
