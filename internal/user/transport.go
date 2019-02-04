@@ -3,8 +3,8 @@ package user
 import (
 	"encoding/json"
 
-	"github.com/tinrab/event-source-store/internal/api"
-	"github.com/tinrab/event-source-store/internal/pkg/bus"
+	"github.com/tinrab/event-source-scream/internal/api"
+	"github.com/tinrab/event-source-scream/internal/pkg/bus"
 )
 
 type Transport struct {
@@ -20,7 +20,7 @@ func NewTransport(b *bus.Bus, s *Service) *Transport {
 }
 
 func (t *Transport) Run() error {
-	if err := t.bus.Reply("api.user.create", t.createUser); err != nil {
+	if err := t.bus.Reply("user.create", t.createUser); err != nil {
 		return err
 	}
 	return nil
@@ -42,7 +42,7 @@ func (t *Transport) createUser(data []byte) interface{} {
 	}
 
 	return api.CreateUserResponse{
-		ID:   uint64(u.ID),
+		ID:   u.ID,
 		Name: u.Name,
 	}
 }

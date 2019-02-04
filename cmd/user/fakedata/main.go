@@ -9,9 +9,9 @@ import (
 	"github.com/icrowley/fake"
 	"github.com/tinrab/kit/id"
 
-	"github.com/tinrab/event-source-store/internal/pkg/config"
-	"github.com/tinrab/event-source-store/internal/pkg/database"
-	"github.com/tinrab/event-source-store/internal/user"
+	"github.com/tinrab/event-source-scream/internal/pkg/config"
+	"github.com/tinrab/event-source-scream/internal/pkg/database"
+	"github.com/tinrab/event-source-scream/internal/user"
 )
 
 func main() {

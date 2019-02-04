@@ -6,7 +6,7 @@ import (
 
 	_ "github.com/lib/pq"
 
-	"github.com/tinrab/event-source-store/internal/pkg/config"
+	"github.com/tinrab/event-source-scream/internal/pkg/config"
 )
 
 type Database struct {

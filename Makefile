@@ -19,5 +19,17 @@ user-migrate-drop: ## Drop user database
 user-fake: ## Insert fake data into user database
 	go run ./cmd/user/fakedata
 
+scream: ## Run scream service
+	go run ./cmd/scream
+
+scream-migrate-up: ## Run migrations for scream database
+	go run ./cmd/scream/migrate
+
+scream-migrate-drop: ## Drop scream database
+	go run ./cmd/scream/migrate -action=drop
+
+scream-fake: ## Insert fake data into scream database
+	go run ./cmd/scream/fakedata
+
 help: ## Display this help screen
 	grep -h -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'

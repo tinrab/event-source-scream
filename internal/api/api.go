@@ -9,7 +9,7 @@ import (
 
 	"github.com/gorilla/mux"
 
-	"github.com/tinrab/event-source-store/internal/pkg/bus"
+	"github.com/tinrab/event-source-scream/internal/pkg/bus"
 )
 
 type Server struct {
@@ -33,35 +33,12 @@ func NewServer(port uint16, b *bus.Bus) *Server {
 func (s *Server) Run() error {
 	s.router.HandleFunc("/users", s.createUser).
 		Methods("POST")
+	s.router.HandleFunc("/users/{userId}/screams", s.listScreamsByUser).
+		Methods("GET")
+	s.router.HandleFunc("/screams", s.createScream).
+		Methods("POST")
 
 	return http.ListenAndServe(fmt.Sprintf(":%d", s.port), s.router)
-}
-
-func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
-	var req CreateUserRequest
-
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		s.respond(w, http.StatusBadRequest, CreateUserResponse{
-			Error: err.Error(),
-		})
-		return
-	}
-
-	var res CreateUserResponse
-
-	if err := s.bus.Request("api.user.create", req, &res, timeout); err != nil {
-		s.respond(w, http.StatusBadRequest, CreateUserResponse{
-			Error: err.Error(),
-		})
-		return
-	}
-
-	if len(res.Error) != 0 {
-		s.respond(w, http.StatusBadRequest, res)
-		return
-	}
-
-	s.respond(w, http.StatusOK, res)
 }
 
 func (s *Server) respond(w http.ResponseWriter, status int, data interface{}) {

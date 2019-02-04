@@ -3,9 +3,9 @@ package main
 import (
 	"log"
 
-	"github.com/tinrab/event-source-store/internal/api"
-	"github.com/tinrab/event-source-store/internal/pkg/bus"
-	"github.com/tinrab/event-source-store/internal/pkg/config"
+	"github.com/tinrab/event-source-scream/internal/api"
+	"github.com/tinrab/event-source-scream/internal/pkg/bus"
+	"github.com/tinrab/event-source-scream/internal/pkg/config"
 )
 
 func main() {

@@ -1,7 +1,7 @@
 package user
 
 import (
-	"github.com/tinrab/event-source-store/internal/pkg/database"
+	"github.com/tinrab/event-source-scream/internal/pkg/database"
 )
 
 type Repository struct {

@@ -8,8 +8,8 @@ import (
 
 	"github.com/nats-io/go-nats"
 
-	"github.com/tinrab/event-source-store/internal/pkg/config"
-	"github.com/tinrab/event-source-store/internal/pkg/event"
+	"github.com/tinrab/event-source-scream/internal/pkg/config"
+	"github.com/tinrab/event-source-scream/internal/pkg/event"
 )
 
 type Bus struct {

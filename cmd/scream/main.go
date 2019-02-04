@@ -5,14 +5,15 @@ import (
 
 	"github.com/tinrab/kit/id"
 
+	"github.com/tinrab/event-source-scream/internal/scream"
+
 	"github.com/tinrab/event-source-scream/internal/pkg/bus"
 	"github.com/tinrab/event-source-scream/internal/pkg/config"
 	"github.com/tinrab/event-source-scream/internal/pkg/database"
-	"github.com/tinrab/event-source-scream/internal/user"
 )
 
 func main() {
-	c, err := config.Load("./cmd/user/config.yml")
+	c, err := config.Load("./cmd/scream/config.yml")
 	if err != nil {
 		log.Fatal(err)
 	}
@@ -27,11 +28,11 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := user.NewRepository(db)
-	idg := id.NewGenerator(0)
-	s := user.NewService(idg, r)
+	r := scream.NewRepository(db)
+	idg := id.NewGenerator(1)
+	s := scream.NewService(idg, r)
 
-	t := user.NewTransport(b, s)
+	t := scream.NewTransport(b, s)
 	if err := t.Run(); err != nil {
 		log.Fatal(err)
 	}

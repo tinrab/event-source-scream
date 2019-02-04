@@ -4,7 +4,7 @@ import (
 	"github.com/lib/pq"
 	"github.com/tinrab/kit/id"
 
-	"github.com/tinrab/event-source-store/internal/pkg/database"
+	"github.com/tinrab/event-source-scream/internal/pkg/database"
 )
 
 type Store struct {
