@@ -3,6 +3,7 @@ package main
 import (
 	"log"
 
+	"github.com/tinrab/event-source-scream/internal/pkg/event"
 	"github.com/tinrab/kit/id"
 
 	"github.com/tinrab/event-source-scream/internal/pkg/bus"
@@ -27,8 +28,10 @@ func main() {
 		log.Fatal(err)
 	}
 
-	r := user.NewRepository(db)
-	idg := id.NewGenerator(0)
+	es := event.NewStore(db, "events")
+
+	r := user.NewRepository(db, es)
+	idg := id.NewGenerator(1)
 	s := user.NewService(idg, r)
 
 	t := user.NewTransport(b, s)

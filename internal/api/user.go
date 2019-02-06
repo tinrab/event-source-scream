@@ -5,6 +5,9 @@ import (
 	"net/http"
 
 	"github.com/tinrab/kit/id"
+
+	"github.com/tinrab/event-source-scream/internal/pkg/command"
+	userCommand "github.com/tinrab/event-source-scream/internal/user/command"
 )
 
 type CreateUserRequest struct {
@@ -27,19 +30,35 @@ func (s *Server) createUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var res CreateUserResponse
+	data := userCommand.CreateUser{
+		Name: req.Name,
+	}
+	cmd := command.New(s.idGenerator.Generate(), userCommand.KindCreateUser, data)
+	var res command.Result
 
-	if err := s.bus.Request("user.create", req, &res, timeout); err != nil {
+	if err := s.bus.PublishCommand(cmd, &res, timeout); err != nil {
 		s.respond(w, http.StatusBadRequest, CreateUserResponse{
 			Error: err.Error(),
 		})
 		return
 	}
 
-	if len(res.Error) != 0 {
-		s.respond(w, http.StatusBadRequest, res)
+	if res.IsError() {
+		s.respond(w, http.StatusBadRequest, CreateUserResponse{
+			Error: res.Error,
+		})
 		return
 	}
 
-	s.respond(w, http.StatusOK, res)
+	var resultData userCommand.CreateUserResult
+	if err := json.Unmarshal(res.Data, &resultData); err != nil {
+		s.respond(w, http.StatusBadRequest, CreateUserResponse{
+			Error: res.Error,
+		})
+	}
+
+	s.respond(w, http.StatusOK, CreateUserResponse{
+		ID:   resultData.ID,
+		Name: resultData.Name,
+	})
 }

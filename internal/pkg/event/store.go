@@ -1,6 +1,8 @@
 package event
 
 import (
+	"fmt"
+
 	"github.com/lib/pq"
 	"github.com/tinrab/kit/id"
 
@@ -8,12 +10,14 @@ import (
 )
 
 type Store struct {
-	db *database.Database
+	db    *database.Database
+	table string
 }
 
-func NewStore(db *database.Database) *Store {
+func NewStore(db *database.Database, table string) *Store {
 	return &Store{
-		db: db,
+		db:    db,
+		table: table,
 	}
 }
 
@@ -30,13 +34,13 @@ func (s *Store) Save(events []Event) (err error) {
 		err = txn.Commit()
 	}()
 
-	stmt, err := txn.Prepare(pq.CopyIn("events", "id", "aggregate_id", "kind", "version", "fired_at", "data"))
+	stmt, err := txn.Prepare(pq.CopyIn(s.table, "id", "aggregate_id", "kind", "version", "fired_at", "data"))
 	if err != nil {
 		return
 	}
 
 	for _, e := range events {
-		_, err = stmt.Exec(e.ID(), e.AggregateID(), e.Kind(), e.Version(), e.FiredAt(), string(e.Data()))
+		_, err = stmt.Exec(e.ID, e.AggregateID, e.Kind, e.Version, e.FiredAt, string(e.Data))
 		if err != nil {
 			return err
 		}
@@ -55,7 +59,7 @@ func (s *Store) Save(events []Event) (err error) {
 
 func (s *Store) Load(aggregateID id.ID, fromVersion uint64) ([]Event, error) {
 	rows, err := s.db.Query(
-		"SELECT id, kind, version, fired_at, data FROM events WHERE aggregate_id = $1 AND version > $2 ORDER BY fired_at DESC",
+		fmt.Sprintf("SELECT id, kind, version, fired_at, data FROM %s WHERE aggregate_id = $1 AND version > $2 ORDER BY fired_at DESC", s.table),
 		aggregateID,
 		fromVersion,
 	)
@@ -64,21 +68,21 @@ func (s *Store) Load(aggregateID id.ID, fromVersion uint64) ([]Event, error) {
 	}
 
 	var events []Event
-	e := &event{}
+	e := &Event{}
 	var data string
 
 	for rows.Next() {
-		if err = rows.Scan(&e.eventID, &e.kind, &e.version, &e.firedAt, &data); err != nil {
+		if err = rows.Scan(&e.ID, &e.Kind, &e.Version, &e.FiredAt, &data); err != nil {
 			return nil, err
 		}
 
-		events = append(events, &event{
-			eventID:     e.eventID,
-			data:        Data(data),
-			firedAt:     e.firedAt,
-			version:     e.version,
-			kind:        e.kind,
-			aggregateID: e.aggregateID,
+		events = append(events, Event{
+			ID:          e.ID,
+			Data:        []byte(data),
+			FiredAt:     e.FiredAt,
+			Version:     e.Version,
+			Kind:        e.Kind,
+			AggregateID: e.AggregateID,
 		})
 	}
 

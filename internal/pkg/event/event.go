@@ -1,53 +1,42 @@
 package event
 
 import (
+	"encoding/json"
 	"time"
 
 	"github.com/tinrab/kit/id"
 )
 
-type Kind string
-
-type Data []byte
-
-type Event interface {
-	ID() id.ID
-	AggregateID() id.ID
-	Kind() Kind
-	Version() uint64
-	FiredAt() time.Time
-	Data() Data
+type Event struct {
+	ID          id.ID     `json:"id"`
+	CommandID   id.ID     `json:"command_id"`
+	AggregateID id.ID     `json:"aggregate_id"`
+	Kind        string    `json:"kind"`
+	Version     uint64    `json:"version"`
+	FiredAt     time.Time `json:"fired_at"`
+	Data        []byte    `json:"data"`
 }
 
-type event struct {
-	eventID     id.ID
-	aggregateID id.ID
-	kind        Kind
-	version     uint64
-	firedAt     time.Time
-	data        Data
+func New(kind string, aggregateID id.ID, data interface{}) Event {
+	bd, _ := json.Marshal(data)
+
+	return Event{
+		AggregateID: aggregateID,
+		Kind:        kind,
+		Version:     1,
+		FiredAt:     time.Now().UTC(),
+		Data:        bd,
+	}
 }
 
-func (e *event) ID() id.ID {
-	return e.eventID
-}
+func NewFromPrevious(previous Event, kind string, data interface{}) Event {
+	bd, _ := json.Marshal(data)
 
-func (e *event) AggregateID() id.ID {
-	return e.aggregateID
-}
-
-func (e *event) Kind() Kind {
-	return e.kind
-}
-
-func (e *event) Version() uint64 {
-	return e.version
-}
-
-func (e *event) FiredAt() time.Time {
-	return e.firedAt
-}
-
-func (e *event) Data() Data {
-	return e.data
+	return Event{
+		AggregateID: previous.AggregateID,
+		Kind:        kind,
+		Version:     previous.Version + 1,
+		FiredAt:     time.Now().UTC(),
+		Data:        bd,
+	}
 }

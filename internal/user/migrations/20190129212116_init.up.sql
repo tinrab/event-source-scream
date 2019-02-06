@@ -12,8 +12,9 @@ CREATE TABLE "events"
 
 CREATE TABLE "users"
 (
-  "id"         bigint,
-  "name"       varchar(32),
+  "id"      bigint,
+  "version" bigint,
+  "name"    varchar(32),
 
   PRIMARY KEY ("id")
 );

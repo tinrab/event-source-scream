@@ -1,12 +1,9 @@
 package user
 
 import (
-	"github.com/pkg/errors"
 	"github.com/tinrab/kit/id"
-)
 
-var (
-	ErrInvalidUserData = errors.New("invalid user data")
+	userCommand "github.com/tinrab/event-source-scream/internal/user/command"
 )
 
 type Service struct {
@@ -21,19 +18,17 @@ func NewService(idg *id.Generator, r *Repository) *Service {
 	}
 }
 
-func (s *Service) CreateUser(name string) (*User, error) {
+func (s *Service) CreateUser(cmd userCommand.CreateUser) (*User, error) {
 	u := &User{
-		ID:   s.idGenerator.Generate(),
-		Name: name,
+		ID: s.idGenerator.Generate(),
 	}
 
-	if !u.IsValid() {
-		return nil, ErrInvalidUserData
-	}
-
-	if err := s.repository.SaveUser(*u); err != nil {
+	events, err := u.processCreate(cmd)
+	if err != nil {
 		return nil, err
 	}
+
+	u.apply(events)
 
 	return u, nil
 }

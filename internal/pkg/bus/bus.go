@@ -8,6 +8,7 @@ import (
 
 	"github.com/nats-io/go-nats"
 
+	"github.com/tinrab/event-source-scream/internal/pkg/command"
 	"github.com/tinrab/event-source-scream/internal/pkg/config"
 	"github.com/tinrab/event-source-scream/internal/pkg/event"
 )
@@ -17,14 +18,9 @@ type Bus struct {
 	conn *nats.Conn
 }
 
-type SubscribeHandler func(channel string, data []byte)
+type EventHandler func(event.Event)
 
-type RequestHandler func(data []byte) interface{}
-
-type Message struct {
-	Data    []byte
-	Channel string
-}
+type CommandHandler func(kind string, data []byte) command.Result
 
 func NewBus(c config.BusConfig) *Bus {
 	return &Bus{
@@ -48,68 +44,55 @@ func (b *Bus) Close() {
 	}
 }
 
-func (b *Bus) Publish(e event.Event) error {
-	subj := fmt.Sprintf("%s:%d", e.Kind(), e.AggregateID())
-	return b.conn.Publish(subj, e.Data())
+func (b *Bus) PublishEvent(e event.Event) error {
+	subj := fmt.Sprintf("%s:%d", e.Kind, e.AggregateID)
+	data, _ := json.Marshal(e)
+	return b.conn.Publish(subj, data)
 }
 
-func (b *Bus) Subscribe(channel string, handler SubscribeHandler) error {
-	_, err := b.conn.Subscribe(channel, func(msg *nats.Msg) {
-		handler(msg.Subject, msg.Data)
+func (b *Bus) HandleEvent(kind string, handler EventHandler) error {
+	_, err := b.conn.Subscribe(kind, func(msg *nats.Msg) {
+		var e event.Event
+		if err := json.Unmarshal(msg.Data, &e); err != nil {
+			log.Print(err)
+			return
+		}
+
+		e.Kind = msg.Subject
+
+		handler(e)
 	})
 
 	return err
 }
 
-func (b *Bus) SubscribeChan(channel string) (chan Message, error) {
-	ch := make(chan *nats.Msg)
-	res := make(chan Message)
-
-	s, err := b.conn.ChanSubscribe(channel, ch)
-	if err != nil {
-		return nil, err
-	}
-
-	go func() {
-		for m := range ch {
-			res <- Message{
-				Data:    m.Data,
-				Channel: m.Subject,
-			}
-		}
-		_ = s.Unsubscribe()
-		close(res)
-	}()
-
-	return res, nil
-}
-
-func (b *Bus) Request(channel string, req interface{}, res interface{}, timeout time.Duration) error {
-	data, err := json.Marshal(req)
+func (b *Bus) PublishCommand(c command.Command, res *command.Result, timeout time.Duration) error {
+	data, _ := json.Marshal(c)
+	msg, err := b.conn.Request(c.Kind, data, timeout)
 	if err != nil {
 		return err
 	}
-
-	msg, err := b.conn.Request(channel, data, timeout)
-	if err != nil {
-		return err
-	}
-
 	return json.Unmarshal(msg.Data, res)
 }
 
-func (b *Bus) Reply(channel string, handler RequestHandler) error {
-	_, err := b.conn.Subscribe(channel, func(msg *nats.Msg) {
-		res := handler(msg.Data)
+func (b *Bus) HandleCommand(kind string, handler CommandHandler) error {
+	_, err := b.conn.Subscribe(kind, func(msg *nats.Msg) {
+		//var c command.Command
+		//if err := json.Unmarshal(msg.Data, &c); err != nil {
+		//	log.Print(err)
+		//	return
+		//}
 
-		data, err := json.Marshal(res)
+		//c.Kind = msg.Subject
+		r := handler(msg.Subject, msg.Data)
+
+		data, err := json.Marshal(r)
 		if err != nil {
 			log.Print(err)
 			return
 		}
 
-		err = b.conn.Publish(msg.Reply, data)
-		if err != nil {
+		if err = b.conn.Publish(msg.Reply, data); err != nil {
 			log.Print(err)
 		}
 	})
